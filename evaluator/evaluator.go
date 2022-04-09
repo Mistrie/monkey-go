@@ -16,10 +16,27 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	// Statements
 	case *ast.Program:
+		return evalProgram(node, env)
+
 	case *ast.BlockStatement:
+		return evalBlockStatement(node, env)
+
 	case *ast.ExpressionStatement:
+		return Eval(node.Expression, env)
+
 	case *ast.ReturnStatement:
+		val := Eval(node.ReturnValue, env)
+		if isError(val) {
+			return val
+		}
+		return &object.ReturnValue{Value: val}
+
 	case *ast.LetStatement:
+		val := Eval(node.Value, env)
+		if isError(val) {
+			return val
+		}
+		env.Set(node.Name.Value, val)
 
 	// Literals
 	case *ast.IntegerLiteral:
