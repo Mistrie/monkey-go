@@ -48,8 +48,18 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 }
 
 func evalIfExpresssion(ie *ast.IfExpression, env *object.Environment) object.Object {
-	// TODO
-	return nil
+	condition := Eval(ie.Condition, env)
+	if isError(condition) {
+		return condition
+	}
+
+	if isTruthy(condition) {
+		return Eval(ie.Consequence, env)
+	} else if ie.Alternative != nil {
+		return Eval(ie.Alternative, env)
+	} else {
+		return NULL
+	}
 }
 
 func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
@@ -58,13 +68,29 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 }
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
-	// TODO
-	return nil
+	switch fn := fn.(type) {
+	case *object.Function:
+		extendedEnv := extendedFunctionEnv(fn, args)
+		evaluated := Eval(fn.Body, extendedEnv)
+		return unwrapReturnValue(evaluated)
+
+	case *object.Builtin:
+		return fn.Fn(args...)
+
+	default:
+		return newError("not a function: %s", fn.Type())
+	}
 }
 
 func evalIndexExpression(left, index object.Object) object.Object {
-	// TODO
-	return nil
+	switch {
+	case left.Type() == object.ARRAY_OBJ && index.Type() == object.INTEGER_OBJ:
+		return evalArrayIndexExpression(left, index)
+	case left.Type() == object.HASH_OBJ:
+		return evalHashIndexExpression(left, index)
+	default:
+		return newError("index operator not supported: %s", left.Type())
+	}
 }
 
 func evalBangOperatorExpression(right object.Object) object.Object {
@@ -123,4 +149,63 @@ func evalStringInfixExpression(operator string, left, right object.Object) objec
 	leftVal := left.(*object.String).Value
 	rightVal := right.(*object.String).Value
 	return &object.String{Value: leftVal + rightVal}
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case NULL:
+		return false
+	case TRUE:
+		return true
+	case FALSE:
+		return false
+	default:
+		return true
+	}
+}
+
+func extendedFunctionEnv(fn *object.Function, args []object.Object) *object.Environment {
+	env := object.NewEnclosedEnvironment(fn.Env)
+
+	for paramIdx, param := range fn.Parameters {
+		env.Set(param.Value, args[paramIdx])
+	}
+
+	return env
+}
+
+func unwrapReturnValue(obj object.Object) object.Object {
+	if returnValue, ok := obj.(*object.ReturnValue); ok {
+		return returnValue.Value
+	}
+
+	return obj
+}
+
+func evalArrayIndexExpression(array, index object.Object) object.Object {
+	arrayObject := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+	max := int64(len(arrayObject.Elements) - 1)
+
+	if idx < 0 || idx > max {
+		return NULL
+	}
+
+	return arrayObject.Elements[idx]
+}
+
+func evalHashIndexExpression(hash, index object.Object) object.Object {
+	hashObject := hash.(*object.Hash)
+
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return newError("unusable as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashObject.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+
+	return pair.Value
 }
