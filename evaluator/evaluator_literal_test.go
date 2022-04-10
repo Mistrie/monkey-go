@@ -8,8 +8,6 @@ import (
 )
 
 func TestEvalIntegerExpression(t *testing.T) {
-	t.Skip("evaluators are not ready yet")
-
 	tests := []struct {
 		input    string
 		expected int64
@@ -38,8 +36,6 @@ func TestEvalIntegerExpression(t *testing.T) {
 }
 
 func TestEvalBooleanExpression(t *testing.T) {
-	t.Skip("evaluators are not ready yet")
-
 	tests := []struct {
 		input    string
 		expected bool
@@ -72,8 +68,6 @@ func TestEvalBooleanExpression(t *testing.T) {
 }
 
 func TestStringLiteral(t *testing.T) {
-	t.Skip("evaluators are not ready yet")
-
 	input := `"Hello World!"`
 
 	evaluated := testEval(input)
@@ -88,8 +82,6 @@ func TestStringLiteral(t *testing.T) {
 }
 
 func TestFunctionObject(t *testing.T) {
-	t.Skip("evaluators are not ready yet")
-
 	input := "fn(x) { x + 2; };"
 
 	evaluated := testEval(input)
@@ -114,8 +106,6 @@ func TestFunctionObject(t *testing.T) {
 }
 
 func TestArrayLiterals(t *testing.T) {
-	t.Skip("evaluators are not ready yet")
-
 	input := "[1, 2 * 2, 3 + 3]"
 
 	evaluated := testEval(input)
@@ -134,8 +124,6 @@ func TestArrayLiterals(t *testing.T) {
 }
 
 func TestHashLiterals(t *testing.T) {
-	t.Skip("evaluators are not ready yet")
-
 	input := `let two="two";
 	{
 		"one": 10 - 9,
@@ -211,5 +199,13 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 		return false
 	}
 
+	return true
+}
+
+func testNullObject(t *testing.T, obj object.Object) bool {
+	if obj != NULL {
+		t.Errorf("object is not NULL. got=%T (%+v)", obj, obj)
+		return false
+	}
 	return true
 }
