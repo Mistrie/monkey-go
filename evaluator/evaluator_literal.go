@@ -5,7 +5,7 @@ import (
 	"monkey/object"
 )
 
-func nativeBoolToBooleanOBject(input bool) *object.Boolean {
+func nativeBoolToBooleanObject(input bool) *object.Boolean {
 	if input {
 		return TRUE
 	}
