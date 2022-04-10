@@ -65,11 +65,50 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 	// Expressions
 	case *ast.PrefixExpression:
+		right := Eval(node.Right, env)
+		if isError(right) {
+			return right
+		}
+		return evalPrefixExpression(node.Operator, right)
+
 	case *ast.InfixExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		right := Eval(node.Right, env)
+		if isError(right) {
+			return right
+		}
+		return evalInfixExpression(node.Operator, left, right)
+
 	case *ast.IfExpression:
+		return evalIfExpresssion(node, env)
+
 	case *ast.Identifier:
+		return evalIdentifier(node, env)
+
 	case *ast.CallExpression:
+		function := Eval(node.Function, env)
+		if isError(function) {
+			return function
+		}
+		args := evalExpressions(node.Arguments, env)
+		if len(args) == 1 && isError(args[0]) {
+			return args[0]
+		}
+		return applyFunction(function, args)
+
 	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
 	}
 
 	return nil
